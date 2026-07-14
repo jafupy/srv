@@ -49,6 +49,11 @@ impl CapabilityBackend {
     }
 
     pub async fn entries(&self, path: PathBuf) -> io::Result<Vec<DirectoryEntry>> {
+        let path = if path.as_os_str().is_empty() {
+            PathBuf::from(".")
+        } else {
+            path
+        };
         self.ensure_visible(&path)?;
         let root = self.root.clone();
         let show_hidden = self.show_hidden;
