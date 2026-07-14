@@ -1,11 +1,12 @@
 [package]
 name = "srv"
-version = "1.0.0"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Fast native static file server with instant LAN sharing"
 repository = "https://github.com/jafupy/srv"
 readme = "README.md"
+license = "AGPL-3.0-only"
 keywords = ["static", "server", "lan", "development", "cli"]
 categories = ["command-line-utilities", "web-programming::http-server"]
 
