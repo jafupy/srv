@@ -232,6 +232,7 @@ mod tests {
         let entries = backend.entries(PathBuf::new()).await.unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "visible.txt");
+        drop(backend);
 
         tokio::fs::remove_dir_all(base).await.unwrap();
     }
