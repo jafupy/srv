@@ -53,9 +53,7 @@ pub fn startup(
 pub fn open_browser(url: &str) -> io::Result<()> {
     #[cfg(target_os = "windows")]
     {
-        Command::new("cmd")
-            .args(["/C", "start", "", url])
-            .spawn()?;
+        Command::new("cmd").args(["/C", "start", "", url]).spawn()?;
         return Ok(());
     }
 

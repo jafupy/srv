@@ -51,11 +51,7 @@ impl Policy {
     }
 }
 
-pub async fn apply(
-    State(policy): State<Policy>,
-    request: Request<Body>,
-    next: Next,
-) -> Response {
+pub async fn apply(State(policy): State<Policy>, request: Request<Body>, next: Next) -> Response {
     let started = Instant::now();
     let method = request.method().clone();
     let uri = request.uri().clone();

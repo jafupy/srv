@@ -221,9 +221,7 @@ mod tests {
         tokio::fs::write(base.join("visible.txt"), "ok")
             .await
             .unwrap();
-        tokio::fs::write(base.join(".secret"), "no")
-            .await
-            .unwrap();
+        tokio::fs::write(base.join(".secret"), "no").await.unwrap();
 
         let backend = CapabilityBackend::new(&base, false).unwrap();
         let entries = backend.entries(PathBuf::new()).await.unwrap();

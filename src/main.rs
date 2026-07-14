@@ -40,9 +40,8 @@ async fn main() -> Result<()> {
         clean_urls: !args.no_clean_urls,
         not_found: args.not_found.clone(),
     };
-    let fallback = get(move |uri| {
-        directory::fallback(backend.clone(), uri, fallback_options.clone())
-    });
+    let fallback =
+        get(move |uri| directory::fallback(backend.clone(), uri, fallback_options.clone()));
     let app = Router::new().fallback_service(files.fallback(fallback));
 
     // Keep the native watcher alive for as long as the server is running.
