@@ -1,22 +1,7 @@
 
 running 15 tests
-.............. 14/15
-backend::tests::hides_dotfiles_from_directory_listings --- FAILED
-
-failures:
-
----- backend::tests::hides_dotfiles_from_directory_listings stdout ----
-
-thread 'backend::tests::hides_dotfiles_from_directory_listings' (2724) panicked at src\backend.rs:236:47:
-called `Result::unwrap()` on an `Err` value: Os { code: 32, kind: Uncategorized, message: "The process cannot access the file because it is being used by another process." }
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+...............
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 
-failures:
-    backend::tests::hides_dotfiles_from_directory_listings
-
-test result: FAILED. 14 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
-
-[1m[91merror[0m: test failed, to rerun pass `--bin srv`
-
-exit_status=101
+exit_status=0
