@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 0.1.0
 
 - LAN-first static file serving with terminal QR codes
 - Native file watching and browser live reload
