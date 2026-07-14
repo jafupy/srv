@@ -83,3 +83,7 @@ Anyone who can reach the selected interface can request visible files under the 
 ## Scope
 
 Srv is a development and local-sharing server, not a production reverse proxy. TLS termination, authentication, rate limiting, and application routing belong in a production web server.
+
+## License
+
+GNU Affero General Public License v3.0 only. See `LICENSE`.
