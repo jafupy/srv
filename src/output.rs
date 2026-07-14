@@ -1,37 +1,79 @@
 use std::{
+    io,
     net::{IpAddr, SocketAddr},
     path::Path,
+    process::Command,
 };
 
 use local_ip_address::local_ip;
 use qrcode::{QrCode, render::unicode};
 
-pub fn startup(root: &Path, address: SocketAddr, show_qr: bool, live_reload: bool) {
-    let local_url = url(loopback_for(address.ip()), address.port());
-    let lan_url = network_ip(address.ip(), local_ip().ok()).map(|ip| url(ip, address.port()));
+pub struct Urls {
+    pub local: String,
+}
 
-    println!("Serving {}", root.display());
-    println!("  Local:   {local_url}");
-    if let Some(url) = &lan_url {
-        println!("  Network: {url}");
-    }
-    if live_reload {
-        println!("  Reload:  watching for changes");
-    }
-    println!("\nPress Ctrl+C to stop.");
+pub fn startup(
+    root: &Path,
+    address: SocketAddr,
+    show_qr: bool,
+    live_reload: bool,
+    quiet: bool,
+) -> Urls {
+    let local = url(loopback_for(address.ip()), address.port());
+    let network = network_ip(address.ip(), local_ip().ok()).map(|ip| url(ip, address.port()));
 
-    if show_qr
-        && let Some(url) = lan_url
-        && let Ok(code) = QrCode::new(url.as_bytes())
+    if !quiet {
+        println!("Serving {}", root.display());
+        println!("  Local:   {local}");
+        if let Some(url) = &network {
+            println!("  Network: {url}");
+        }
+        if live_reload {
+            println!("  Reload:  watching for changes");
+        }
+        println!("\nPress Ctrl+C to stop.");
+
+        if show_qr
+            && let Some(url) = &network
+            && let Ok(code) = QrCode::new(url.as_bytes())
+        {
+            // Two vertical QR modules per terminal cell using Unicode half blocks.
+            let qr = code
+                .render::<unicode::Dense1x2>()
+                .quiet_zone(true)
+                .module_dimensions(1, 1)
+                .build();
+            println!("\n{qr}");
+        }
+    }
+
+    Urls { local }
+}
+
+pub fn open_browser(url: &str) -> io::Result<()> {
+    #[cfg(target_os = "windows")]
     {
-        // Two vertical QR modules per terminal cell using Unicode half blocks.
-        let qr = code
-            .render::<unicode::Dense1x2>()
-            .quiet_zone(true)
-            .module_dimensions(1, 1)
-            .build();
-        println!("\n{qr}");
+        Command::new("cmd").args(["/C", "start", "", url]).spawn()?;
+        return Ok(());
     }
+
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open").arg(url).spawn()?;
+        return Ok(());
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        Command::new("xdg-open").arg(url).spawn()?;
+        return Ok(());
+    }
+
+    #[allow(unreachable_code)]
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "opening a browser is not supported on this platform",
+    ))
 }
 
 fn loopback_for(bound: IpAddr) -> IpAddr {
