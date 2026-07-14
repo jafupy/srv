@@ -19,7 +19,9 @@ jobs:
       - name: Run tests and record diagnostics
         shell: pwsh
         run: |
-          cargo test --all-features --quiet *> windows-diagnostics.txt
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
+          cmd /c "cargo test --all-features --quiet > windows-diagnostics.txt 2>&1"
           $status = $LASTEXITCODE
           Add-Content windows-diagnostics.txt "`nexit_status=$status"
           git config user.name "github-actions[bot]"
