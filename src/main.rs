@@ -3,6 +3,7 @@ mod cli;
 mod directory;
 mod output;
 mod reload;
+mod toolbar;
 
 use std::{
     io,
@@ -11,7 +12,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use axum::{Router, routing::get};
+use axum::{Router, middleware, routing::get};
 use backend::CapabilityBackend;
 use clap::Parser;
 use cli::Args;
@@ -32,8 +33,17 @@ async fn main() -> Result<()> {
     let backend = CapabilityBackend::new(&root)?;
     let files = ServeDir::with_backend("", backend.clone());
     let single = args.single;
-    let fallback = get(move |uri| directory::fallback(backend.clone(), uri, single));
+    let fallback_backend = backend.clone();
+    let fallback = get(move |uri| directory::fallback(fallback_backend.clone(), uri, single));
     let app = Router::new().fallback_service(files.fallback(fallback));
+    let app = if args.no_ls {
+        app
+    } else {
+        app.layer(middleware::from_fn_with_state(
+            (backend, single),
+            toolbar::inject,
+        ))
+    };
 
     // Keep the native watcher alive for as long as the server is running.
     let (app, _watcher) = if args.no_reload {

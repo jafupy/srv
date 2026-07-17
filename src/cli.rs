@@ -26,7 +26,22 @@ pub struct Args {
     #[arg(long)]
     pub no_qr: bool,
 
+    /// Disable the injected file explorer.
+    #[arg(long)]
+    pub no_ls: bool,
+
     /// Disable file watching and automatic browser refresh.
     #[arg(long)]
     pub no_reload: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_no_ls() {
+        let args = Args::try_parse_from(["srv", "--no-ls"]).unwrap();
+        assert!(args.no_ls);
+    }
 }

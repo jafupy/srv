@@ -38,10 +38,35 @@ impl CapabilityBackend {
         .map_err(io::Error::other)?
     }
 
+    pub async fn read_bounded(&self, path: PathBuf, max_bytes: u64) -> io::Result<Option<Vec<u8>>> {
+        let root = self.root.clone();
+        tokio::task::spawn_blocking(move || {
+            if root.metadata(&path)?.len() > max_bytes {
+                return Ok(None);
+            }
+            let file = root.open(path)?;
+            let mut bytes = Vec::new();
+            file.take(max_bytes.saturating_add(1))
+                .read_to_end(&mut bytes)?;
+            if bytes.len() as u64 > max_bytes {
+                Ok(None)
+            } else {
+                Ok(Some(bytes))
+            }
+        })
+        .await
+        .map_err(io::Error::other)?
+    }
+
     pub async fn entries(&self, path: PathBuf) -> io::Result<Vec<(String, bool)>> {
         let root = self.root.clone();
         tokio::task::spawn_blocking(move || {
             let mut items = Vec::new();
+            let path = if path.as_os_str().is_empty() {
+                PathBuf::from(".")
+            } else {
+                path
+            };
             for entry in root.read_dir(path)? {
                 let entry = entry?;
                 let Ok(name) = entry.file_name().into_string() else {
@@ -176,6 +201,39 @@ mod tests {
             Backend::open(&backend, PathBuf::from("leak"))
                 .await
                 .is_err()
+        );
+        tokio::fs::remove_dir_all(base).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn bounded_reads_reject_files_over_the_limit() {
+        let base = std::env::temp_dir().join(format!(
+            "srv-bounded-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        tokio::fs::create_dir_all(&base).await.unwrap();
+        tokio::fs::write(base.join("page.html"), "0123456789")
+            .await
+            .unwrap();
+
+        let backend = CapabilityBackend::new(&base).unwrap();
+        assert_eq!(
+            backend
+                .read_bounded(PathBuf::from("page.html"), 10)
+                .await
+                .unwrap(),
+            Some(b"0123456789".to_vec())
+        );
+        assert_eq!(
+            backend
+                .read_bounded(PathBuf::from("page.html"), 9)
+                .await
+                .unwrap(),
+            None
         );
         tokio::fs::remove_dir_all(base).await.unwrap();
     }
